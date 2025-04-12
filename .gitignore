@@ -1,2 +1,11 @@
 mp_20_test
 CIF-FMT-1000_original-code-diffcsp-mp20.csv.gz
+potpaw_PBE
+potpaw_PBE_pmg
+*.csv.gz
+test
+.env
+__pycache__
+mp_20_finished
+test_mp-865470
+
