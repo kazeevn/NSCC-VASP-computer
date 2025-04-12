@@ -9,7 +9,7 @@ import os
 #uri = "mongodb+srv://kna:wLAPjXSfUlTTdvP7@kna-nscc-atomate2.idyxat9.mongodb.net/?appName=KNA-NSCC-atomate2"
 #uri = r"mongodb://nscc-atomate2-kna-db-user:izUdNsZhU0lrYdTJHk9e80sGS@asp2a-login-nus02:17017/nscc-atomate2-kna-db?directConnection=true&serverSelectionTimeoutMS=10000"
 
-uri = rf"mongodb://nscc-atomate2-kna-db-user:izUdNsZhU0lrYdTJHk9e80sGS@localhost:{os.getenv("MONGODB_PORT")}/nscc-atomate2-kna-db?directConnection=true&serverSelectionTimeoutMS=5000"
+uri = rf"mongodb://nscc-atomate2-kna-db-user:izUdNsZhU0lrYdTJHk9e80sGS@localhost:{os.getenv("JOBFLOW_JOB_STORE__DOCS_STORE__PORT")}/nscc-atomate2-kna-db?directConnection=true&serverSelectionTimeoutMS=5000"
 
 print("Initializing MongoDB client...")
 client = MongoClient(uri, server_api=ServerApi('1'))

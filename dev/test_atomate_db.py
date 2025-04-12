@@ -6,7 +6,5 @@ store = SETTINGS.JOB_STORE
 store.connect()
 
 # query the job store
-result = store.query_one(
-    {"output.formula_pretty": "Si"}, properties=["output.output.energy_per_atom"]
-)
+result = store.query_one(properties=["output.output.energy_per_atom"])
 print(result)

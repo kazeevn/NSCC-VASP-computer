@@ -1,5 +1,4 @@
 #!/bin/bash
-#PBS -N atomate_vasp
 #PBS -l select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1
 #PBS -l walltime=23:59:58
 #PBS -P 12003663
@@ -41,11 +40,17 @@ if [ $? -ne 0 ] || [ -z "$LOCAL_PORT" ]; then
   echo "Error: Port finding failed. Exiting." >&2
   exit 1 # Exit if no port was found
 fi
-export MONGODB_PORT="$LOCAL_PORT"
-echo "Found available port: $MONGODB_PORT. Exported as MONGODB_PORT."
+export JOBFLOW_JOB_STORE__DOCS_STORE__PORT="$LOCAL_PORT"
+echo "Found available port: $LOCAL_PORT. Exported as JOBFLOW_JOB_STORE__DOCS_STORE__PORT."
 
-ssh -fN -L $MONGODB_PORT:localhost:17017 asp2a-login-nus02 &
+ssh -fN -L $LOCAL_PORT:localhost:17017 asp2a-login-nus02 &
 sleep 1
 
-python mongo_test.py
-python test_atomate_vasp.py
+# STRUCTURES="/home/users/nus/kna/NSCC-VASP-computer/mp_20_test.csv.gz"
+# STRUCTURE_ID="mp-1660"
+# PROJECT_ROOT="/home/users/nus/kna/NSCC-VASP-computer/"
+# SCRATCH_ROOT=/home/users/nus/kna/scratch/dft_runs
+JOBFLOW_FOLDER="$SCRATCH_ROOT/$RUN_NAME/jobflow/"
+mkdir -p "$JOBFLOW_FOLDER"
+python $PROJECT_ROOT/mongo_ping.py
+python $PROJECT_ROOT/worker_local.py $STRUCTURES --structure-id $STRUCTURE_ID --job-folder "$JOBFLOW_FOLDER" --run-name "$RUN_NAME"
