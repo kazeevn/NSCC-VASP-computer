@@ -22,7 +22,7 @@ def main():
             "output.entry",
             "output.structure"]))
     entries = [ComputedEntry.from_dict(record['output']['entry']) for record in result]
-    MaterialsProject2020Compatibility(check_potcar=False).process_entries(
+    MaterialsProject2020Compatibility(check_potcar=True).process_entries(
         entries, inplace=True, on_error="raise", verbose=True)
     with gzip.open(DataFiles.mp_patched_phase_diagram.mp_patched_phase_diagram.path, mode="rb") as zip_file:
         ppd_mp: PatchedPhaseDiagram = pickle.load(zip_file)
@@ -37,7 +37,7 @@ def main():
         index=index
     )
     data.to_csv(f"{args.run_name}.csv.gz", index_label="material_id")
-    
+
 
 if __name__ == "__main__":
     main()
