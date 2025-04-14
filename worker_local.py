@@ -40,7 +40,7 @@ def main():
     print(f"Will relax structure {args.structure_id}")
     flow = update_user_potcar_functional(
         MPGGADoubleRelaxStaticMaker().make(structure=target_structure),
-        potcar_functional="PBE_54")
+        potcar_functional="PBE_52")
     flow.update_metadata({
         "material_id": args.structure_id,
         "run_name": args.run_name,
