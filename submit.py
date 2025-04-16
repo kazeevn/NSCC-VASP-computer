@@ -33,7 +33,7 @@ def main():
     parser.add_argument("structures", type=Path,
                         help="CSV with structures")
     parser.add_argument("run_name", type=str)
-    parser.add_argument("--sample-n", type=int, help="Only compute first N structures")
+    parser.add_argument("--sample-n", type=int, help="Only compute N randomly sampled structures")
     parser.add_argument("--sampling-random-seed", type=int, default=42,
                         help="Random seed for sampling only")
     parser.add_argument("--resume", action="store_true",
