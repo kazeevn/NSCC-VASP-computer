@@ -17,8 +17,6 @@ SOCKET="/tmp/$(uuidgen).sock"
 ssh -fN -oControlMaster=auto -oControlPath=/tmp/$(uuidgen).sock -oControlPersist=yes \
     -oServerAliveInterval=60 -oExitOnForwardFailure=yes \
     -L $SOCKET:localhost:17017 asp2a-login-nus02 &
-export JOBFLOW_JOB_STORE__DOCS_STORE__PORT=""
-export JOBFLOW_JOB_STORE__DOCS_STORE__HOST="$SOCKET"
 echo "Started SSH forwarding via $SOCKET"
 sleep 1
 
@@ -29,6 +27,9 @@ sleep 1
 # SCRATCH_ROOT=/home/users/nus/kna/scratch/dft_runs
 JOBFLOW_FOLDER="$SCRATCH_ROOT/$RUN_NAME/jobflow/"
 mkdir -p "$JOBFLOW_FOLDER"
+export NEW_JOBFLOW_CONFIG_FILE=/tmp/config-$(uuidgen).yaml
+python $PROJECT_ROOT/write_jobflow_config.py $NEW_JOBFLOW_CONFIG_FILE
+export JOBFLOW_CONFIG_FILE=$NEW_JOBFLOW_CONFIG_FILE
 python $PROJECT_ROOT/mongo_ping.py
 python $PROJECT_ROOT/worker_local.py $STRUCTURES --structure-id $STRUCTURE_ID --job-folder "$JOBFLOW_FOLDER" --run-name "$RUN_NAME"
 rm "$SOCKET"
