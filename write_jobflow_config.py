@@ -1,11 +1,12 @@
 import os
 from pathlib import Path
 import yaml
+from urllib.parse import quote_plus
 from argparse import ArgumentParser
 
 def update_host_port(dict_):
     if "host" in dict_:
-        dict_["host"] = os.getenv("SOCKET")
+        dict_["host"] = "mongodb://" + quote_plus(os.getenv("SOCKET"))
     if "port" in dict_:
         del dict_['port']
     for key, value in dict_.items():

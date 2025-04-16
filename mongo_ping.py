@@ -5,7 +5,7 @@ from jobflow import SETTINGS
 
 print("Initializing MongoDB client...")
 client = MongoClient(
-    host="mongodb://" + urllib.parse.quote_plus(SETTINGS.JOB_STORE.docs_store.host),
+    host=SETTINGS.JOB_STORE.docs_store.host,
     port=SETTINGS.JOB_STORE.docs_store.port)
 print(client)
 print("Sending a ping to confirm a successful connection...")

@@ -13,10 +13,11 @@ module load mkl/2022.0.2
 module load miniforge3
 conda activate vasp_computer
 
-SOCKET="/tmp/$(uuidgen).sock"
-ssh -fN -oControlMaster=auto -oControlPath=/tmp/$(uuidgen).sock -oControlPersist=yes \
+MONGODB_PORTAL=asp2a-login-nus02
+export SOCKET="$TMPDIR/mongodb.sock"
+ssh -fN -oControlMaster=auto -oControlPath=$TMPDIR/cm-$MONGODB_PORTAL.sock -oControlPersist=yes \
     -oServerAliveInterval=60 -oExitOnForwardFailure=yes \
-    -L $SOCKET:localhost:17017 asp2a-login-nus02 &
+    -L $SOCKET:localhost:17017 $MONGODB_PORTAL &
 echo "Started SSH forwarding via $SOCKET"
 sleep 1
 
@@ -25,11 +26,12 @@ sleep 1
 # STRUCTURE_ID="mp-1660"
 # PROJECT_ROOT="/home/users/nus/kna/NSCC-VASP-computer/"
 # SCRATCH_ROOT=/home/users/nus/kna/scratch/dft_runs
-JOBFLOW_FOLDER="$SCRATCH_ROOT/$RUN_NAME/jobflow/"
+JOBFLOW_FOLDER="$SCRATCH_ROOT/$RUN_NAME/jobflow/$PBS_JOBID"
 mkdir -p "$JOBFLOW_FOLDER"
-export NEW_JOBFLOW_CONFIG_FILE=/tmp/config-$(uuidgen).yaml
+NEW_JOBFLOW_CONFIG_FILE="$TMPDIR/jobflow-config.yaml"
 python $PROJECT_ROOT/write_jobflow_config.py $NEW_JOBFLOW_CONFIG_FILE
 export JOBFLOW_CONFIG_FILE=$NEW_JOBFLOW_CONFIG_FILE
 python $PROJECT_ROOT/mongo_ping.py
 python $PROJECT_ROOT/worker_local.py $STRUCTURES --structure-id $STRUCTURE_ID --job-folder "$JOBFLOW_FOLDER" --run-name "$RUN_NAME"
 rm "$SOCKET"
+rm "$NEW_JOBFLOW_CONFIG_FILE"
