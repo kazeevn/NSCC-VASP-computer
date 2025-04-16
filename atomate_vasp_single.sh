@@ -13,39 +13,16 @@ module load mkl/2022.0.2
 module load miniforge3
 conda activate vasp_computer
 
-PORT_SEARCH_START=17017           # Start of local port range to search
-PORT_SEARCH_END=18000             # End of local port range to search
-find_free_port() {
-  local start_port=${1:-10000} # Default start port if not provided
-  local end_port=${2:-65535}   # Default end port if not provided
-  local port
-  echo "Searching for an available TCP port between $start_port and $end_port..."  >&2
-  for port in $(seq "$start_port" "$end_port"); do
-    # Try to bind to the port using Python. This is a reliable way to check availability.
-    # It attempts to create a socket and bind it to '0.0.0.0' (all interfaces) and the port.
-    # If successful (exit code 0), the port is free. It closes the socket immediately.
-    if python -c "import socket; s = socket.socket(); s.bind(('', $port)); s.close()" &>/dev/null; then
-      echo "$port" # Output the found port number
-      return 0     # Success
-    fi
-  done
-  # If the loop finishes without finding a port
-  echo "Error: Could not find a free port in the range $start_port-$end_port." >&2
-  return 1 # Failure
-}
-LOCAL_PORT=$(find_free_port "$PORT_SEARCH_START" "$PORT_SEARCH_END")
-
-# Check if the function succeeded in finding a port
-if [ $? -ne 0 ] || [ -z "$LOCAL_PORT" ]; then
-  echo "Error: Port finding failed. Exiting." >&2
-  exit 1 # Exit if no port was found
-fi
-export JOBFLOW_JOB_STORE__DOCS_STORE__PORT="$LOCAL_PORT"
-echo "Found available port: $LOCAL_PORT. Exported as JOBFLOW_JOB_STORE__DOCS_STORE__PORT."
-
-ssh -fN -L $LOCAL_PORT:localhost:17017 asp2a-login-nus02 &
+SOCKET="/tmp/$(uuidgen).sock"
+ssh -fN -oControlMaster=auto -oControlPath=/tmp/$(uuidgen).sock -oControlPersist=yes \
+    -oServerAliveInterval=60 -oExitOnForwardFailure=yes \
+    -L $SOCKET:localhost:17017 asp2a-login-nus02 &
+export JOBFLOW_JOB_STORE__DOCS_STORE__PORT=""
+export JOBFLOW_JOB_STORE__DOCS_STORE__HOST="$SOCKET"
+echo "Started SSH forwarding via $SOCKET"
 sleep 1
 
+# Example:
 # STRUCTURES="/home/users/nus/kna/NSCC-VASP-computer/mp_20_test.csv.gz"
 # STRUCTURE_ID="mp-1660"
 # PROJECT_ROOT="/home/users/nus/kna/NSCC-VASP-computer/"
@@ -54,3 +31,4 @@ JOBFLOW_FOLDER="$SCRATCH_ROOT/$RUN_NAME/jobflow/"
 mkdir -p "$JOBFLOW_FOLDER"
 python $PROJECT_ROOT/mongo_ping.py
 python $PROJECT_ROOT/worker_local.py $STRUCTURES --structure-id $STRUCTURE_ID --job-folder "$JOBFLOW_FOLDER" --run-name "$RUN_NAME"
+rm "$SOCKET"
