@@ -1,5 +1,5 @@
 #!/bin/bash
-#PBS -l select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1
+#PBS -l select=1:ncpus=64:mem=192gb:mpiprocs=64:ompthreads=1
 #PBS -l walltime=23:59:58
 #PBS -P 12003663
 #PBS -q normal
