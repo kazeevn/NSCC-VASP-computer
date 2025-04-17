@@ -7,7 +7,7 @@ from argparse import ArgumentParser
 import pandas as pd
 import numpy as np
 import subprocess
-
+from jobflow import SETTINGS
 from utils import load_cifs
 
 SCRATCH_ROOT = Path.home().resolve() / "scratch" / "dft_runs"
@@ -36,11 +36,16 @@ def main():
     parser.add_argument("--sample-n", type=int, help="Only compute N randomly sampled structures")
     parser.add_argument("--sampling-random-seed", type=int, default=42,
                         help="Random seed for sampling only")
-    parser.add_argument("--resume", action="store_true",
+    existing_jobs = parser.add_mutually_exclusive_group()
+    existing_jobs.add_argument("--resume", action="store_true",
                         help="Submit the structures that have no jobs")
     parser.add_argument("--retry-minutes", type=int,
                         help="Retry submitting every X minutes")
+    existing_jobs.add_argument("--resubmit-missing-from-db", action="store_true")
+    
     args = parser.parse_args()
+    if args.retry_minutes and args.resubmit_missing_from_db:
+        raise NotImplementedError
     index = load_cifs(args.structures).index
     if args.sample_n:
         rng = np.random.default_rng(seed=args.sampling_random_seed)
@@ -48,7 +53,7 @@ def main():
     run_root = SCRATCH_ROOT / args.run_name
     pbs_root = run_root.joinpath("PBS")
 
-    if not args.resume:
+    if not args.resume and not args.resubmit_missing_from_db:
         run_root.mkdir(exist_ok=False)
         pbs_root.mkdir(exist_ok=False)
     
@@ -59,6 +64,18 @@ def main():
     
     if args.resume:
         all_jobs = get_all_jobs()
+    elif args.resubmit_missing_from_db:
+        store = SETTINGS.JOB_STORE
+        store.connect()
+        all_jobs = frozenset(map(
+            lambda record: index.dtype.type(record['metadata']['material_id']),
+            store.query({
+                "metadata.run_name": args.run_name,
+                "name": "MP GGA static",
+                "output.state": "successful"},
+                properties=["metadata.material_id"])))
+        if len(all_jobs) == 0:
+            raise RuntimeError("No jobs in DB, check connection")
     else:
         all_jobs = frozenset()
     
