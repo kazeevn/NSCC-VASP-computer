@@ -7,6 +7,11 @@
 #PBS -M kna@nus.edu.sg
 cd $PBS_O_WORKDIR
 
+# ASPIRE2A
+# HPE Cray EX 2x AMD EPYC Millan 7713 providing total compute capacity of up to 10 PFlops, 512 GB memory and 128 cores per node.
+# // 17.04.25 Increasing memory 128 -> 192 resulted in much longer queue time
+# comment = Not Running: Insufficient amount of resource: node_pool
+
 module swap PrgEnv-cray PrgEnv-intel
 module swap intel intel/2022.0.2
 module load mkl/2022.0.2

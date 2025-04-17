@@ -13,9 +13,9 @@ from utils import load_cifs
 SCRATCH_ROOT = Path.home().resolve() / "scratch" / "dft_runs"
 PROJECT_ROOT = Path(__file__).resolve().parent
 
-def get_submitted_jobs(run_name: str) -> List[str]:
+def get_running_jobs(run_name: str) -> List[str]:
     recent_jobs = subprocess.run(
-        ['qstat', '-x'],
+        ['qstat'],
         capture_output=True,
         check=True
     )
@@ -36,16 +36,16 @@ def main():
     parser.add_argument("--sample-n", type=int, help="Only compute N randomly sampled structures")
     parser.add_argument("--sampling-random-seed", type=int, default=42,
                         help="Random seed for sampling only")
-    existing_jobs = parser.add_mutually_exclusive_group()
-    existing_jobs.add_argument("--resume", action="store_true",
-                        help="Submit the structures that have no jobs")
+    parser.add_argument("--resume", action="store_true",
+                        help="Resume submitting an existing run")
+    parser.add_argument("--exclude-db", action="store_true",
+                        help="Exclude structures that have been sucessfully completed in DB")
+    parser.add_argument("--exclude-running", action="store_true",
+                        help="Exclude structures that have currently running jobs")
     parser.add_argument("--retry-minutes", type=int,
                         help="Retry submitting every X minutes")
-    existing_jobs.add_argument("--resubmit-missing-from-db", action="store_true")
     
     args = parser.parse_args()
-    if args.retry_minutes and args.resubmit_missing_from_db:
-        raise NotImplementedError
     index = load_cifs(args.structures).index
     if args.sample_n:
         rng = np.random.default_rng(seed=args.sampling_random_seed)
@@ -53,32 +53,31 @@ def main():
     run_root = SCRATCH_ROOT / args.run_name
     pbs_root = run_root.joinpath("PBS")
 
-    if not args.resume and not args.resubmit_missing_from_db:
+    if not args.resume:
         run_root.mkdir(exist_ok=False)
         pbs_root.mkdir(exist_ok=False)
     
-    def get_all_jobs():
-        pbs_jobs = get_submitted_jobs(args.run_name)
-        folder_jobs = get_jobs_in_folder(args.run_name, run_root)
-        return frozenset(map(index.dtype.type, chain(pbs_jobs, folder_jobs)))
-    
-    if args.resume:
-        all_jobs = get_all_jobs()
-    elif args.resubmit_missing_from_db:
+    if args.exclude_db:
         store = SETTINGS.JOB_STORE
         store.connect()
-        all_jobs = frozenset(map(
+    
+    def get_excluded_structures():
+        exclusions = []
+        if args.exclude_db:
+            db_jobs = frozenset(map(
             lambda record: index.dtype.type(record['metadata']['material_id']),
             store.query({
                 "metadata.run_name": args.run_name,
                 "name": "MP GGA static",
                 "output.state": "successful"},
                 properties=["metadata.material_id"])))
-        if len(all_jobs) == 0:
-            raise RuntimeError("No jobs in DB, check connection")
-    else:
-        all_jobs = frozenset()
-    
+            if len(db_jobs) == 0:
+                raise RuntimeError("No jobs in DB, check connection")
+            exclusions.append(db_jobs)
+        if args.exclude_running:
+            exclusions.append(get_running_jobs(args.run_name))
+        return frozenset(map(index.dtype.type, chain(*exclusions)))
+        
     def submit_structure(structure_id):
         return subprocess.run(
             ["qsub", "-v", f"SCRATCH_ROOT={SCRATCH_ROOT}, RUN_NAME={args.run_name}, "
@@ -94,9 +93,9 @@ def main():
                 continue
             submit_structure(structure_id)
 
+    all_jobs = get_excluded_structures()
     if args.retry_minutes:
         while len(all_jobs) < len(index):
-            all_jobs = get_all_jobs()
             try:
                 submit_missing(all_jobs)
             except subprocess.CalledProcessError as e:
@@ -104,6 +103,7 @@ def main():
                 print(e)
                 print("Will retry")
             sleep(60*args.retry_minutes)
+            all_jobs = get_allget_excluded_structures_jobs()
     else:
         submit_missing(all_jobs)
         
