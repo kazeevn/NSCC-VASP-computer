@@ -1,4 +1,5 @@
 from typing import List
+from enum import Enum
 from pathlib import Path
 import re
 from time import sleep
@@ -13,19 +14,32 @@ from utils import load_cifs
 SCRATCH_ROOT = Path.home().resolve() / "scratch" / "dft_runs"
 PROJECT_ROOT = Path(__file__).resolve().parent
 
-def get_running_jobs(run_name: str) -> List[str]:
+def get_jobs(run_name: str, include_recently_finished: bool) -> List[str]:
+    args = ['qstat']
+    if include_recently_finished:
+        args.append("-x")
     recent_jobs = subprocess.run(
-        ['qstat'],
+        args,
         capture_output=True,
         check=True
     )
     structure_id_re = re.compile(fr"{run_name}-(\w+)")
     return structure_id_re.findall(recent_jobs.stdout.decode("utf-8"))
 
-def get_jobs_in_folder(run_name: str, run_folder: Path) -> List[str]:
+def get_jobs_in_folder(run_name: str, run_pbs_folder: Path) -> List[str]:
     structure_id_re = re.compile(fr"{run_name}-(\w+)")
-    all_files = run_folder.glob(fr'**/{run_name}-*')
+    all_files = run_pbs_folder.glob(fr'**/{run_name}-*')
     return (structure_id_re.match(file.stem).groups(0)[0] for file in all_files)
+
+
+class Exclusion(Enum):
+    db = "db"
+    files = "files"
+    running_jobs = "running_jobs"
+    recent_jobs = "recent_jobs"
+
+    def __str__(self):
+        return self.value
 
 
 def main():
@@ -38,14 +52,15 @@ def main():
                         help="Random seed for sampling only")
     parser.add_argument("--resume", action="store_true",
                         help="Resume submitting an existing run")
-    parser.add_argument("--exclude-db", action="store_true",
-                        help="Exclude structures that have been sucessfully completed in DB")
-    parser.add_argument("--exclude-running", action="store_true",
-                        help="Exclude structures that have currently running jobs")
-    parser.add_argument("--retry-minutes", type=int,
+    parser.add_argument("--retry-minutes", type=float,
                         help="Retry submitting every X minutes")
-    
+    parser.add_argument("-e", "--exclude", nargs="+", type=Exclusion,
+                        choices=tuple(Exclusion),
+                        help="Don't resubmit structures that have jobs in those sources")
     args = parser.parse_args()
+    if Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
+        print(f"Specifying both {Exclusion.running_jobs} and {Exclusion.recent_jobs} has no effect"
+               "as the latter includes the former.")
     index = load_cifs(args.structures).index
     if args.sample_n:
         rng = np.random.default_rng(seed=args.sampling_random_seed)
@@ -57,25 +72,25 @@ def main():
         run_root.mkdir(exist_ok=False)
         pbs_root.mkdir(exist_ok=False)
     
-    if args.exclude_db:
-        store = SETTINGS.JOB_STORE
-        store.connect()
-    
     def get_excluded_structures():
         exclusions = []
-        if args.exclude_db:
+        if Exclusion.db in args.exclude:
+            store = SETTINGS.JOB_STORE
+            store.connect()
             db_jobs = frozenset(map(
-            lambda record: index.dtype.type(record['metadata']['material_id']),
-            store.query({
-                "metadata.run_name": args.run_name,
-                "name": "MP GGA static",
-                "output.state": "successful"},
-                properties=["metadata.material_id"])))
+                lambda record: index.dtype.type(record['metadata']['material_id']),
+                store.query({
+                    "metadata.run_name": args.run_name,
+                    "name": "MP GGA static",
+                    "output.state": "successful"},
+                    properties=["metadata.material_id"])))
             if len(db_jobs) == 0:
                 raise RuntimeError("No jobs in DB, check connection")
             exclusions.append(db_jobs)
-        if args.exclude_running:
-            exclusions.append(get_running_jobs(args.run_name))
+        if Exclusion.running_jobs in args.exclude or Exclusion.recent_jobs in args.exclude:
+            exclusions.append(get_jobs(args.run_name, include_recently_finished=Exclusion.recent_jobs in args.exclude))
+        if Exclusion.files in args.exclude:
+            exclusions.append(get_jobs_in_folder(args.run_name, pbs_root))
         return frozenset(map(index.dtype.type, chain(*exclusions)))
         
     def submit_structure(structure_id):
@@ -101,12 +116,12 @@ def main():
             except subprocess.CalledProcessError as e:
                 print("qusub error:")
                 print(e)
-                print("Will retry")
-            sleep(60*args.retry_minutes)
-            all_jobs = get_allget_excluded_structures_jobs()
+                print(f"Will retry in {args.retry_minutes} minutes")
+            sleep(60 * args.retry_minutes)
+            all_jobs = get_excluded_structures()
     else:
         submit_missing(all_jobs)
-        
+
 
 if __name__ == "__main__":
     main()
