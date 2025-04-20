@@ -21,7 +21,10 @@ def to_structure(structure: Structure | dict | str) -> Structure:
         return Structure.from_dict(structure)
     elif isinstance(structure, str):
         return Structure.from_str(structure, fmt="cif")
-    return structure
+    elif isinstance(structure, Structure):
+        return structure
+    else:
+        raise ValueError("Unknown structure format!")
 
 
 def main():
