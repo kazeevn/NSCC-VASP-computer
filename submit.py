@@ -57,7 +57,7 @@ def main():
     parser.add_argument("-e", "--exclude", nargs="+", type=Exclusion,
                         choices=tuple(Exclusion),
                         help="Don't resubmit structures that have jobs in those sources")
-    parser.add_argument("-l", type="str", default="select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1",
+    parser.add_argument("-l", type=str, default="select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1",
                         dest="resource_list",
                         help="qsub resource list aka -l")
     args = parser.parse_args()
