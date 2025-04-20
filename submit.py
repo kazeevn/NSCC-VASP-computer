@@ -57,6 +57,9 @@ def main():
     parser.add_argument("-e", "--exclude", nargs="+", type=Exclusion,
                         choices=tuple(Exclusion),
                         help="Don't resubmit structures that have jobs in those sources")
+    parser.add_argument("-l", type="str", default="select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1",
+                        dest="resource_list",
+                        help="qsub resource list aka -l")
     args = parser.parse_args()
     if Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
         print(f"Specifying both {Exclusion.running_jobs} and {Exclusion.recent_jobs} has no effect"
@@ -98,6 +101,7 @@ def main():
             ["qsub", "-v", f"SCRATCH_ROOT={SCRATCH_ROOT}, RUN_NAME={args.run_name}, "
             f"PROJECT_ROOT={PROJECT_ROOT}, STRUCTURE_ID={structure_id}, "
             f"STRUCTURES={args.structures.resolve()}",
+            "-l", args.resource_list,
             "-N", f"{args.run_name}-{structure_id}",
             str(PROJECT_ROOT / "atomate_vasp_single.sh")],
             cwd=pbs_root, check=True)

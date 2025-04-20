@@ -8,7 +8,6 @@ from pymatgen.core import Structure
 
 from atomate2.vasp.jobs.core import StaticMaker, RelaxMaker
 from atomate2.vasp.flows.mp import MPGGADoubleRelaxStaticMaker
-from atomate2.vasp.powerups import update_user_potcar_settings, update_user_potcar_functional
 from jobflow import run_locally, Flow
 
 from utils import load_cifs
@@ -39,9 +38,6 @@ def main():
     target_structure = to_structure(cifs.at[cifs.index.dtype.type(args.structure_id)])
     print(f"Will relax structure {args.structure_id}")
     flow = MPGGADoubleRelaxStaticMaker().make(structure=target_structure)
-    #flow = update_user_potcar_functional(
-    #    MPGGADoubleRelaxStaticMaker().make(structure=target_structure),
-    #    potcar_functional="PBE_52")
     flow.update_metadata({
         "material_id": args.structure_id,
         "run_name": args.run_name,
