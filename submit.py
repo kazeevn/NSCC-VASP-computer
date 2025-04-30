@@ -60,6 +60,8 @@ def main():
     parser.add_argument("-l", type=str, default="select=1:ncpus=64:mem=128gb:mpiprocs=64:ompthreads=1",
                         dest="resource_list",
                         help="qsub resource list aka -l")
+    parser.add_argument('--start-index', type=str,
+                        help="Start submitting from this index")
     args = parser.parse_args()
     if Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
         print(f"Specifying both {Exclusion.running_jobs} and {Exclusion.recent_jobs} has no effect"
@@ -70,7 +72,10 @@ def main():
         index = rng.choice(index, args.sample_n, replace=False)
     run_root = SCRATCH_ROOT / args.run_name
     pbs_root = run_root.joinpath("PBS")
-
+    if args.start_index:
+        start_index = index.dtype.type(args.start_index)
+    else:
+        start_index = None
     if not args.resume:
         run_root.mkdir(exist_ok=False)
         pbs_root.mkdir(exist_ok=False)
@@ -108,6 +113,8 @@ def main():
 
     def submit_missing(present_jobs):
         for structure_id in index:
+            if start_index is not None and structure_id < start_index:
+                continue
             if structure_id in present_jobs:
                 continue
             submit_structure(structure_id)
