@@ -37,6 +37,7 @@ class Exclusion(Enum):
     files = "files"
     running_jobs = "running_jobs"
     recent_jobs = "recent_jobs"
+    submitted = "submitted"
 
     def __str__(self):
         return self.value
@@ -62,6 +63,7 @@ def main():
                         help="qsub resource list aka -l")
     parser.add_argument('--start-index', type=str,
                         help="Start submitting from this index")
+    
     args = parser.parse_args()
     if Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
         print(f"Specifying both {Exclusion.running_jobs} and {Exclusion.recent_jobs} has no effect"
@@ -80,6 +82,7 @@ def main():
         run_root.mkdir(exist_ok=False)
         pbs_root.mkdir(exist_ok=False)
     
+    submitted_structures = set()
     def get_excluded_structures():
         exclusions = []
         if Exclusion.db in args.exclude:
@@ -99,9 +102,12 @@ def main():
             exclusions.append(get_jobs(args.run_name, include_recently_finished=Exclusion.recent_jobs in args.exclude))
         if Exclusion.files in args.exclude:
             exclusions.append(get_jobs_in_folder(args.run_name, pbs_root))
+        if Exclusion.submitted in args.exclude:
+            exclusions.append(submitted_structures)
         return frozenset(map(index.dtype.type, chain(*exclusions)))
         
     def submit_structure(structure_id):
+        submitted_structures.add(structure_id)
         return subprocess.run(
             ["qsub", "-v", f"SCRATCH_ROOT={SCRATCH_ROOT}, RUN_NAME={args.run_name}, "
             f"PROJECT_ROOT={PROJECT_ROOT}, STRUCTURE_ID={structure_id}, "
