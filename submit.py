@@ -65,7 +65,7 @@ def main():
                         help="Start submitting from this index")
     
     args = parser.parse_args()
-    if Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
+    if args.exclude and Exclusion.running_jobs in args.exclude and Exclusion.recent_jobs in args.exclude:
         print(f"Specifying both {Exclusion.running_jobs} and {Exclusion.recent_jobs} has no effect"
                "as the latter includes the former.")
     index = load_cifs(args.structures).index
@@ -84,6 +84,8 @@ def main():
     
     submitted_structures = set()
     def get_excluded_structures():
+        if args.exclude is None:
+            return frozenset()
         exclusions = []
         if Exclusion.db in args.exclude:
             store = SETTINGS.JOB_STORE
