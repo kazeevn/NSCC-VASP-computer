@@ -94,7 +94,14 @@ def main():
         "structure",
         "entry"
     ]]
-
+    duplicates = data.index.duplicated(keep=False)
+    if duplicates.any():
+        print("Warning: Duplicate material IDs found. To preserve fairness, will keep the first occurrence.")
+        for material_id in data.index[duplicates].unique():
+            print(f"Duplicate material ID: {material_id}")
+            print(data.loc[material_id, ["e_above_hull_corrected", "e_uncorrected"]])
+        keep_first_duplicates = data.index.duplicated(keep="first")
+        data = data[~keep_first_duplicates]
     print(f"Saving data to {args.run_name}.csv.gz")
     data.to_csv(f"{args.run_name}.csv.gz", index_label="material_id")
     print("Done.")
