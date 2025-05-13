@@ -1,6 +1,5 @@
 from pathlib import Path
 from argparse import ArgumentParser
-import pandas as pd
 from atomate2.vasp.flows.mp import MPGGADoubleRelaxStaticMaker
 from jobflow.managers.fireworks import flow_to_workflow
 from fireworks import LaunchPad
@@ -21,7 +20,8 @@ def main():
     args = parser.parse_args()
     structures_str = load_cifs(args.structures)
     if args.sample_n:
-        structures_str = structures_str.sample(args.sample_n)
+        structures_str = structures_str.sample(
+            args.sample_n, random_state=args.sampling_random_seed)
     
     lpad = LaunchPad.auto_load()
 
