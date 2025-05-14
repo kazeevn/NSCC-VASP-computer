@@ -23,6 +23,8 @@ def main():
                         help="Skip the POTCAR check in MaterialsProject2020Compatibility")
     parser.add_argument('--initial-structure-count', type=int, help="Total number of submissions, "
                         "used to account for failed relaxations during stability check.")
+    parser.add_argument('--metastable-threshold', type=float, default=0.1,
+                        help="Threshold for metastability in eV.")
     args = parser.parse_args()
 
     store = SETTINGS.JOB_STORE
@@ -117,7 +119,8 @@ def main():
 
     print("Warning: stability check consider exotic entries as unstable.")
     print(f"Stable {(data.e_above_hull_corrected < 0).sum() / initial_structure_count * 100:.2f}%")
-    print(f"Metastable (0.1 eV) {(data.e_above_hull_corrected < 0.1).sum() / initial_structure_count * 100:.2f}%")
+    print(f"Metastable ({args.metastable_threshold}) "
+          f"{(data.e_above_hull_corrected < args.metastable_threshold).sum() / initial_structure_count * 100:.2f}%")
 
 if __name__ == "__main__":
     main()
