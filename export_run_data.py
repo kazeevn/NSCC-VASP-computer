@@ -21,6 +21,10 @@ def main():
     parser.add_argument("run_name", type=str)
     parser.add_argument('--skip-potcar-check', action='store_true',
                         help="Skip the POTCAR check in MaterialsProject2020Compatibility")
+    parser.add_argument('--initial-structure-count', type=int, help="Total number of submissions, "
+                        "used to account for failed relaxations during stability check.")
+    parser.add_argument('--metastable-threshold', type=float, default=0.1,
+                        help="Threshold for metastability in eV.")
     args = parser.parse_args()
 
     store = SETTINGS.JOB_STORE
@@ -105,7 +109,18 @@ def main():
     print(f"Saving data to {args.run_name}.csv.gz")
     data.to_csv(f"{args.run_name}.csv.gz", index_label="material_id")
     print("Done.")
+    if args.initial_structure_count is not None:        
+        initial_structure_count = args.initial_structure_count
+        print(f"Initial structure count: {initial_structure_count}")
+        print(f"Final structure count: {len(data)}")
+        print(f"Missing relaxations, considered as unsatable: {initial_structure_count - len(data)}")
+    else:
+        initial_structure_count = len(data)
 
+    print("Warning: stability check consider exotic entries as unstable.")
+    print(f"Stable {(data.e_above_hull_corrected < 0).sum() / initial_structure_count * 100:.2f}%")
+    print(f"Metastable ({args.metastable_threshold}) "
+          f"{(data.e_above_hull_corrected < args.metastable_threshold).sum() / initial_structure_count * 100:.2f}%")
 
 if __name__ == "__main__":
     main()
