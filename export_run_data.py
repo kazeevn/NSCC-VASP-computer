@@ -117,7 +117,7 @@ def main():
     else:
         initial_structure_count = len(data)
 
-    print("Warning: stability check consider exotic entries as unstable.")
+    print("Warning: stability check considers exotic entries as unstable.")
     print(f"Stable {(data.e_above_hull_corrected < 0).sum() / initial_structure_count * 100:.2f}%")
     print(f"Metastable ({args.metastable_threshold}) "
           f"{(data.e_above_hull_corrected < args.metastable_threshold).sum() / initial_structure_count * 100:.2f}%")
