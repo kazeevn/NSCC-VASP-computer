@@ -26,8 +26,8 @@ def main():
     parser.add_argument('--metastable-threshold', type=float, default=0.1,
                         help="Threshold for metastability in eV.")
     parser.add_argument("--atomate-job-name", type=str, default="MP GGA static",
-                        help="Job name in atomate. For MP-compatiable relaxations, they are "
-                        "'MP GGA relax 1', 'MP GGA relax 2', and 'MP GGA static'")
+                        help="Job name in atomate2. For MP-compatiable relaxations, they are "
+                        "'MP GGA relax 1', 'MP GGA relax 2', and 'MP GGA static'")    
     args = parser.parse_args()
 
     print(f'Getting data for job name="{args.atomate_job_name}"')
@@ -55,17 +55,15 @@ def main():
         data_dict = {
             "material_id": material_id,
             "e_uncorrected": entry.uncorrected_energy,
-            "structure": structure,
-            "entry_dict": entry.as_dict(),  # Store as dict for now
+            "structure": json.dumps(structure),
+            "entry_dict": entry.as_dict(),
             "e_corrected": np.nan,
             "e_above_hull_corrected": np.nan
         }
-        if is_exotic(entry):
-            all_data.append(data_dict)
-        else:
+        if not is_exotic(entry):
             non_exotic_entries.append(entry)
             non_exotic_indices.append(len(all_data))  # Store index to update later
-            all_data.append(data_dict)  # Add placeholder
+        all_data.append(data_dict)
 
     print(f"Processing {len(non_exotic_entries)} non-exotic entries...")
     if non_exotic_entries:
@@ -84,7 +82,7 @@ def main():
             entry = non_exotic_entries[i]
             all_data[entry_idx]["e_corrected"] = entry.energy
             all_data[entry_idx]["e_above_hull_corrected"] = e_hull_corrected[i]
-            all_data[entry_idx]["entry_dict"] = entry.as_dict()  # Update with corrected entry
+            all_data[entry_idx]["entry_dict"] = entry.as_dict()
 
     print("Constructing final DataFrame...")
     # Convert entry dicts back to JSON strings for CSV storage
@@ -92,9 +90,10 @@ def main():
         data_dict["entry"] = json.dumps(data_dict.pop("entry_dict"))
 
     data = pandas.DataFrame(all_data)
-    data = data.set_index("material_id")  # Set index after creation
+    data.set_index("material_id", inplace=True)
+    if data.index.map(type).nunique() > 1:
+        print("Warning! Index has multiple types, check DB!")
 
-    # Reorder columns if desired
     data = data[[
         "e_above_hull_corrected",
         "e_uncorrected",
@@ -109,10 +108,11 @@ def main():
             print(f"Duplicate material ID: {material_id}")
             print(data.loc[material_id, ["e_above_hull_corrected", "e_uncorrected"]])
         keep_first_duplicates = data.index.duplicated(keep="first")
-        data = data[~keep_first_duplicates]
-    print(f"Saving data to {args.run_name}.csv.gz")
-    data.to_csv(f"{args.run_name}.csv.gz", index_label="material_id")
-    print("Done.")
+        data = data.loc[~keep_first_duplicates]
+    file_name = f"{args.run_name}-{args.atomate_job_name}.csv.gz"
+    print(f"Saving {len(data)} entries to {file_name}")
+    data.to_csv(file_name, index_label="material_id")
+    print("Done")
     if args.initial_structure_count is not None:        
         initial_structure_count = args.initial_structure_count
         print(f"Initial structure count: {initial_structure_count}")
