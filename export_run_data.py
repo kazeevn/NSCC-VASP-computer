@@ -25,13 +25,16 @@ def main():
                         "used to account for failed relaxations during stability check.")
     parser.add_argument('--metastable-threshold', type=float, default=0.1,
                         help="Threshold for metastability in eV.")
+    parser.add_argument("--atomate-job-name", type=str, default="MP GGA static",
+                        help="Job name in atomate. For MP-compatiable relaxations, they are "
+                        "'MP GGA relax 1', 'MP GGA relax 2', and 'MP GGA static'")
     args = parser.parse_args()
 
     store = SETTINGS.JOB_STORE
     store.connect()
     result = tuple(store.query({
         "metadata.run_name": args.run_name,
-        "name": "MP GGA static",
+        "name": args.atomate_job_name,
         'output.state': 'successful'},
         properties=[
             "metadata",
