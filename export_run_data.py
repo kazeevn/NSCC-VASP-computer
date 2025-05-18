@@ -30,6 +30,7 @@ def main():
                         "'MP GGA relax 1', 'MP GGA relax 2', and 'MP GGA static'")
     args = parser.parse_args()
 
+    print(f'Getting data for job name="{args.atomate_job_name}"')
     store = SETTINGS.JOB_STORE
     store.connect()
     result = tuple(store.query({

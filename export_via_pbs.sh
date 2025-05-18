@@ -9,11 +9,10 @@
 module load miniforge3
 conda activate vasp_computer
 PROJECT_ROOT="/home/users/nus/kna/NSCC-VASP-computer/"
-if [ -z "${VAR}" ]; then
-    ATOMATE_OPTIONS=""
+if [ -z "${ATOMATE_JOB_NAME}" ]; then
+    ATOMATE_OPTION=""
 else
-    ATOMATE_OPTIONS="--atomate-job-name ${ATOMATE_JOB_NAME}"
+    ATOMATE_OPTION=--atomate-job-name
 fi
-echo ${ATOMATE_OPTIONS}
 cd $PROJECT_ROOT
-python export_run_data.py ${RUN_NAME} ${ATOMATE_OPTIONS}
+python export_run_data.py ${RUN_NAME} ${ATOMATE_OPTION} "${ATOMATE_JOB_NAME}"
