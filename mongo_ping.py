@@ -1,6 +1,4 @@
 from pymongo.mongo_client import MongoClient
-import os
-import urllib.parse
 from jobflow import SETTINGS
 
 print("Initializing MongoDB client...")
