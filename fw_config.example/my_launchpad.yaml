@@ -1,0 +1,9 @@
+host: asp2a-login-nus02
+port: 27017
+name: nscc-fireworks-db
+username: #FIXME
+password: #FIXME
+logdir: /home/users/nus/kna/scratch/fireworks_log #FIXME
+Istrm_lvl: DEBUG
+user_indices: []
+wf_user_indices: []

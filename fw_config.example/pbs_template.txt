@@ -1,0 +1,24 @@
+#!/bin/bash
+
+#PBS -l select=$${select}:ncpus=$${ncpus}:mem=$${mem}:mpiprocs=$${mpiprocs}:ompthreads=$${ompthreads}
+#PBS -l walltime=$${walltime}
+#PBS -q $${queue}
+#PBS -A $${account}
+#PBS -G $${group_name}
+#PBS -N $${job_name}
+#PBS -o FW_job.out
+#PBS -e FW_job.error
+#PBS -P #FIXME
+#PBS -m n
+#PBS -M #FIXME
+
+module swap PrgEnv-cray PrgEnv-intel
+module swap intel intel/2022.0.2
+module load mkl/2022.0.2
+module load miniforge3
+conda activate vasp_computer
+
+$${pre_rocket}
+cd $${launch_dir}
+$${rocket_launch}
+$${post_rocket}

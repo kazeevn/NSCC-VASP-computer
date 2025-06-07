@@ -17,6 +17,11 @@ Edit the configuration files, they won't work out of the box! Then add them to y
 export ATOMATE2_CONFIG_FILE="$HOME/atomate2/config/atomate2.yaml"
 export JOBFLOW_CONFIG_FILE="$HOME/atomate2/config/jobflow.yaml"
 ```
+## Configure Fireworks
+```bash
+cp -r fw_config.example ~/fw_config
+```
+Then fix all the entries marked with `#FIXME`
 # Usage
 ## Start MongoDB
 __Make sure no MongoDB instance is running.__ Start MongoDB on __the host specified in jobflow.yaml__ (by default, `asp2a-login-nus02`). In `tmux`:
@@ -36,13 +41,15 @@ python submit_fireworks.py <structures.csv> <run-name>
 ```
 
 ## Submit the jobs to PBS
+Inside `tmux`:
 ```bash
 bash infinite_fireworks.sh
 ```
-The script is a workaround around the PBS max job limit.
+The script is a workaround around the PBS max job limit. It will create `~/scratch/fireworks/` and use them to store the jobs files and logs, including VASP files:
 
 ## Analyze the results
 Edit `export_via_pbs.sh` to fit your environment, then
 ```bash
 qsub -v "ATOMATE_JOB_NAME=MP GGA static, RUN_NAME=<run-name>" export_via_pbs.sh
 ```
+This wil lcreate `<run-name>.csv.gz`. The export script can't be run at the login node, as it requires RAM for the convex hull.

@@ -1,0 +1,16 @@
+_fw_name: CommonAdapter
+_fw_q_type: PBS
+_fw_template_file: /home/users/nus/kna/fw_config/pbs_template.txt #FIXME
+rocket_launch: rlaunch -w /home/users/nus/kna/fw_config/my_fworker.yaml -l /home/users/nus/kna/fw_config/my_launchpad.yaml singleshot #FIXME
+select: 1
+ncpus: 64
+mem: 128gb
+mpiprocs: 64
+ompthreads: 1
+walltime: '23:59:58'
+queue: normal
+account: null
+job_name: null
+logdir: /home/users/nus/kna/scratch/fireworks_log #FIXME
+pre_rocket: null
+post_rocket: null

@@ -1,0 +1,2 @@
+CONFIG_FILE_DIR: <absolute path to the config dir, e.g. /home/users/nus/kna/fw_config> #FIXME
+QUEUE_UPDATE_INTERVAL: 1
