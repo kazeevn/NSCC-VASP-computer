@@ -22,6 +22,10 @@ export JOBFLOW_CONFIG_FILE="$HOME/atomate2/config/jobflow.yaml"
 cp -r fw_config.example ~/fw_config
 ```
 Then fix all the entries marked with `#FIXME`
+
+## (Optional) install MongoDB Compass
+[Download page](https://www.mongodb.com/products/tools/compass). Compass is a GUI you can use to explore our databases.
+
 # Usage
 ## Start MongoDB
 __Make sure no MongoDB instance is running.__ Start MongoDB on __the host specified in jobflow.yaml__ (by default, `asp2a-login-nus02`). In `tmux`:
