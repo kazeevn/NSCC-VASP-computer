@@ -53,3 +53,6 @@ Edit `export_via_pbs.sh` to fit your environment, then
 qsub -v "ATOMATE_JOB_NAME=MP GGA static, RUN_NAME=<run-name>" export_via_pbs.sh
 ```
 This wil lcreate `<run-name>.csv.gz`. The export script can't be run at the login node, as it requires RAM for the convex hull.
+
+## Stop MongoDB
+Leaving it running on the login node is inconsiderate
