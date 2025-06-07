@@ -1,0 +1,9 @@
+JOB_STORE:
+  docs_store:
+    type: MongoStore
+    database: nscc-atomate2-kna-db
+    host: asp2a-login-nus02
+    port: 27017
+    username: <your username>
+    password: <your password>
+    collection_name: outputs

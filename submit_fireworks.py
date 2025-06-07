@@ -1,7 +1,7 @@
 from pathlib import Path
 from argparse import ArgumentParser
-from atomate2.vasp.flows.mp import MPGGADoubleRelaxStaticMaker, \
-    MPGGADoubleRelaxMaker, MPGGARelaxMaker, MPGGAStaticMaker
+from atomate2.vasp.flows.mp import MPGGADoubleRelaxStaticMaker, MPGGADoubleRelaxMaker
+from atomate2.vasp.jobs.mp import MPGGARelaxMaker, MPGGAStaticMaker
 from jobflow.managers.fireworks import flow_to_workflow
 from fireworks import LaunchPad
 from fireworks.fw_config import QUEUEADAPTER_LOC
@@ -16,7 +16,8 @@ def main():
     parser.add_argument("structures", type=Path,
                         help="CSV with structures")
     parser.add_argument("--format", type=str, default="cif",
-                        help="structure format, passed to Structure.from_str")
+                        help="structure format passed to Structure.from_str; "
+                        "also serves as the column name in the CSV")
     parser.add_argument("run_name", type=str)
     parser.add_argument("--sample-n", type=int, help="Only compute N randomly sampled structures")
     parser.add_argument("--sampling-random-seed", type=int, default=42,
@@ -29,9 +30,9 @@ def main():
             args.sample_n, random_state=args.sampling_random_seed)
     
     lpad = LaunchPad.auto_load()
-    print("Assuming that the current default FireWorks config will be used "
-          "to execute the job.")
     walltime_str = load_object_from_file(QUEUEADAPTER_LOC).get("walltime")
+    print("Assuming that the current default FireWorks config will be used "
+          f"to execute the job; setting walltime to {walltime_str}")
     h, m, s = map(int, walltime_str.split(":"))
     walltime_seconds = h * 3600 + m * 60 + s
     run_vasp_kwargs={"wall_time": walltime_seconds, "vasp_job_kwargs": {"auto_continue": True}}

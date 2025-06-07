@@ -1,0 +1,3 @@
+VASP_CMD: mpirun -np 64 /home/users/nus/kna/wt_vasp/vasp.5.4.4/bin/vasp_std 
+VASP_INCAR_UPDATES: {"NCORE": 4}
+VASP_CUSTODIAN_MAX_ERRORS: 50
