@@ -28,6 +28,7 @@ Then fix all the entries marked with `#FIXME`
 
 # Usage
 ## Start MongoDB
+__WARNING! Sharing MongoDB data between different users runs into permissions issues, so, most likely the shared instance won't work for you__
 __Make sure no MongoDB instance is running.__ Start MongoDB on __the host specified in jobflow.yaml__ (by default, `asp2a-login-nus02`). In `tmux`:
 ```bash
  module load singularity
