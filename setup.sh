@@ -28,12 +28,12 @@ singularity exec "instance://$MONGO_INSTANCE" mongod \
 
 echo "Creating MongoDB users..."
 singularity exec "instance://$MONGO_INSTANCE" mongosh "mongodb://localhost:27017" --quiet <<EOF
-db.getSiblingDB("admin").createUser({
+db.getSiblingDB("jobflow").createUser({
   user: "calculator",
   pwd: "${CALCULATOR_PWD}",
   roles: [{ role: "readWrite", db: "jobflow" }]
 });
-db.getSiblingDB("admin").createUser({
+db.getSiblingDB("fireworks").createUser({
   user: "pyrotechnician",
   pwd: "${PYROTECHNICIAN_PWD}",
   roles: [{ role: "readWrite", db: "fireworks" }]
@@ -79,7 +79,6 @@ port: 27017
 name: fireworks
 username: pyrotechnician
 password: ${PYROTECHNICIAN_PWD}
-authsource: admin
 logdir: ${LOGDIR}
 Istrm_lvl: DEBUG
 user_indices: []

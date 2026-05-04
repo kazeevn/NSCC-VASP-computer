@@ -7,6 +7,7 @@ client = MongoClient(
     port=SETTINGS.JOB_STORE.docs_store.port,
     username=SETTINGS.JOB_STORE.docs_store.username,
     password=SETTINGS.JOB_STORE.docs_store.password,
+    authSource=SETTINGS.JOB_STORE.docs_store.auth_source,
     )
 print(client)
 print("Sending a ping to confirm a successful connection...")
