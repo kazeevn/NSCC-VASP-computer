@@ -95,7 +95,8 @@ def main():
 
     print(f"Among them, {len(timed_out_launches)} hit the walltime")
 
-    if args.verbose:
+    if args.verbose and fizzled_for_other_reasons:
+        print("Other traces:")
         for fw_id in fizzled_for_other_reasons:
             fw = lp.get_fw_by_id(fw_id)
             for launch in fw.launches:
