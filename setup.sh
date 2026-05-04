@@ -122,6 +122,7 @@ module swap intel intel/2022.0.2
 module load mkl/2022.0.2
 module load miniforge3
 conda activate ${CONDA_ENV}
+source ${PROJECT_FOLDER}/.env
 
 \$\${pre_rocket}
 cd \$\${launch_dir}
