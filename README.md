@@ -1,9 +1,24 @@
-# Set up
-## Conda environemnt
-```python
+# Running computations for Crys-JEPA while the DB is up
+```bash
+#!/bin/bash
+set -e
 module load miniforge3
-conda env create -f environment.yml
-conda activate vasp_computer
+export PROJECT_ROOT=/home/project/11001786/Crys-JEPA-VASP
+conda activate $PROJECT_ROOT/.conda
+export PMG_VASP_PSP_DIR=$PROJECT_ROOT/VASP_pseudopotentials
+export ATOMATE2_CONFIG_FILE=$PROJECT_ROOT/atomate2/atomate2.yaml
+export JOBFLOW_CONFIG_FILE=$PROJECT_ROOT/atomate2/jobflow.yaml
+export FW_CONFIG_FILE=$PROJECT_ROOT/fw_config/FW_config.yaml
+python mongo_ping.py
+bash infinite_fireworks.sh
+```
+
+# Set up
+## Conda environment
+```bash
+module load miniforge3
+conda env create -f environment.yml -p .conda
+conda activate /.conda
 ```
 ## Set up VASP
 Follow the pymatgen [instructions](https://pymatgen.org/installation.html) on POTCAR Setup. To ensure Materials Project compatibility, make sure you use the old `PBE`, not `PBE_52` or `PBE_54`.
@@ -32,7 +47,9 @@ __WARNING! Sharing MongoDB data between different users runs into permissions is
 __Make sure no MongoDB instance is running.__ Start MongoDB on __the host specified in jobflow.yaml__ (by default, `asp2a-login-nus02`). In `tmux`:
 ```bash
  module load singularity
- singularity run --bind /data/projects/12003663/mongodb_data:/data/db /data/projects/12003663/mongo.sif --auth --bind_ip_all
+ singularity run --bind /home/project/11001786/Crys-JEPA-VASP/mongo_db/data:/data/db /home/project/11001786/Crys-JEPA-VASP/mongo_db/mongo.sif --auth --bind_ip_all
+ # Alternative
+ # singularity run --bind /home/users/nus/kna/Ziqiao-Crystal/mongo_db:/data/db docker://mongodb/mongodb-community-server:8.0.21-ubi9 --auth --bind_ip_all
 ```
 Test that it's accessible:
 ```python
@@ -57,7 +74,13 @@ Edit `export_via_pbs.sh` to fit your environment, then
 ```bash
 qsub -v "ATOMATE_JOB_NAME=MP GGA static, RUN_NAME=<run-name>" export_via_pbs.sh
 ```
-This wil lcreate `<run-name>.csv.gz`. The export script can't be run at the login node, as it requires RAM for the convex hull.
+This will create `<run-name>.csv.gz`. The export script can't be run at the login node, as it requires RAM for the convex hull.
 
 ## Stop MongoDB
 Leaving it running on the login node is inconsiderate
+
+
+## Find per-user failures
+```bash
+find . -user kna -name std_err.txt -exec wc -l {} \;
+```

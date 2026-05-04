@@ -1,7 +1,7 @@
 JOB_STORE:
   docs_store:
     type: MongoStore
-    database: nscc-atomate2-kna-db
+    database: jobflow
     host: asp2a-login-nus02
     port: 27017
     username: <your username>

@@ -10,7 +10,6 @@
 #PBS -e FW_job.error
 #PBS -P #FIXME
 #PBS -m n
-#PBS -M #FIXME
 
 module swap PrgEnv-cray PrgEnv-intel
 module swap intel intel/2022.0.2
